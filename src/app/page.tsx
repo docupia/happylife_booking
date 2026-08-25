@@ -19,7 +19,18 @@ import {
   getCurrentUserVouchers,
   getSessionContext,
 } from "@/lib/booking-data";
-import { ADMIN_EMAIL, hasSupabaseEnv } from "@/lib/config";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { LanguageSwitcher } from "@/components/language-switcher";
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { hasSupabaseEnv } from "@/lib/config";
+import { getI18n } from "@/lib/i18n-server";
+import type { Dictionary, Locale } from "@/lib/i18n";
 import { formatMalaysiaDate, formatMalaysiaDateTime } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
@@ -30,60 +41,68 @@ type PageProps = {
   }>;
 };
 
-function statusLabel(status: ClassWithCounts["effective_status"]) {
+function statusLabel(
+  status: ClassWithCounts["effective_status"],
+  t: Dictionary,
+) {
   if (status === "open") {
-    return "Open";
+    return t.common.open;
   }
   if (status === "upcoming") {
-    return "Opening Soon";
+    return t.common.openingSoon;
   }
-  return "Closed";
+  return t.common.closed;
 }
 
-function StatusPill({ status }: { status: ClassWithCounts["effective_status"] }) {
-  const styles = {
-    open: "bg-emerald-100 text-emerald-800",
-    upcoming: "bg-amber-100 text-amber-900",
-    closed: "bg-slate-200 text-slate-600",
-  };
+function bookingStatusLabel(status: "pending" | "confirmed" | "cancelled", t: Dictionary) {
+  if (status === "pending") {
+    return t.common.pending;
+  }
+  if (status === "confirmed") {
+    return t.common.confirmed;
+  }
 
-  return (
-    <span
-      className={`inline-flex h-7 items-center rounded-lg px-2.5 text-xs font-semibold ${styles[status]}`}
-    >
-      {statusLabel(status)}
-    </span>
-  );
+  return t.common.closed;
+}
+
+function StatusPill({
+  status,
+  t,
+}: {
+  status: ClassWithCounts["effective_status"];
+  t: Dictionary;
+}) {
+  return <Badge variant={status}>{statusLabel(status, t)}</Badge>;
 }
 
 function ClassCard({
   classItem,
   isSignedIn,
+  locale,
+  t,
 }: {
   classItem: ClassWithCounts;
   isSignedIn: boolean;
+  locale: Locale;
+  t: Dictionary;
 }) {
   const remaining = Math.max(classItem.capacity - classItem.confirmed_count, 0);
   const isBookable = classItem.effective_status === "open" && remaining > 0;
 
   return (
-    <article className="rounded-lg border border-stone-200 bg-white p-4 shadow-sm">
-      <div className="flex items-start justify-between gap-3">
+    <Card>
+      <CardHeader>
         <div>
-          <h2 className="text-lg font-bold leading-6 text-slate-950">
-            {classItem.title}
-          </h2>
-          <p className="mt-1 text-sm leading-6 text-slate-600">
-            {classItem.summary}
-          </p>
+          <CardTitle>{classItem.title}</CardTitle>
+          <CardDescription>{classItem.summary}</CardDescription>
         </div>
-        <StatusPill status={classItem.effective_status} />
-      </div>
+        <StatusPill status={classItem.effective_status} t={t} />
+      </CardHeader>
 
       <div className="mt-4 grid gap-2 text-sm text-slate-700">
         <div className="flex items-center gap-2">
           <CalendarClock className="h-4 w-4 text-cyan-700" />
-          <span>{formatMalaysiaDateTime(classItem.starts_at)} MYT</span>
+          <span>{formatMalaysiaDateTime(classItem.starts_at, locale)} MYT</span>
         </div>
         <div className="flex items-center gap-2">
           <MapPin className="h-4 w-4 text-rose-700" />
@@ -92,9 +111,10 @@ function ClassCard({
         <div className="flex items-center gap-2">
           <UserRound className="h-4 w-4 text-slate-500" />
           <span>
-            {classItem.confirmed_count}/{classItem.capacity} confirmed
+            {classItem.confirmed_count}/{classItem.capacity}{" "}
+            {t.common.confirmed}
             {classItem.pending_count > 0
-              ? `, ${classItem.pending_count} pending`
+              ? `, ${classItem.pending_count} ${t.common.pending}`
               : ""}
           </span>
         </div>
@@ -102,33 +122,33 @@ function ClassCard({
 
       <div className="mt-4">
         {!isSignedIn ? (
-          <Link
-            href="/login"
-            className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-slate-950 px-4 text-sm font-semibold text-white"
-          >
-            <LogIn className="h-4 w-4" />
-            Sign in to book
-          </Link>
+          <Button asChild className="w-full">
+            <Link href="/login">
+              <LogIn className="h-4 w-4" />
+              {t.home.signInToBook}
+            </Link>
+          </Button>
         ) : (
           <form action={requestBookingAction}>
             <input type="hidden" name="classId" value={classItem.id} />
-            <button
+            <Button
               type="submit"
               disabled={!isBookable}
-              className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-slate-950 px-4 text-sm font-semibold text-white disabled:bg-slate-300 disabled:text-slate-600"
+              className="w-full disabled:bg-slate-300 disabled:text-slate-600"
             >
               <Ticket className="h-4 w-4" />
-              {isBookable ? "Request Booking" : "Not Available"}
-            </button>
+              {isBookable ? t.home.requestBooking : t.home.notAvailable}
+            </Button>
           </form>
         )}
       </div>
-    </article>
+    </Card>
   );
 }
 
 export default async function Home({ searchParams }: PageProps) {
   const params = await searchParams;
+  const { locale, t } = await getI18n();
   const { user, isAdmin } = await getSessionContext();
   const classes = await getClasses();
   const userBookings = user ? await getCurrentUserBookings(user.id) : [];
@@ -147,29 +167,31 @@ export default async function Home({ searchParams }: PageProps) {
     <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col px-4 pb-24 pt-4 sm:px-6">
       <header className="sticky top-0 z-10 -mx-4 border-b border-stone-200 bg-stone-50/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
         <div className="flex items-center justify-between gap-3">
-          <div>
+          <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-cyan-800">
               HappyLife
             </p>
             <h1 className="text-2xl font-black tracking-normal">
-              Class Booking
+              {t.common.class} {t.common.booking}
             </h1>
           </div>
-          {user ? (
-            <form action={signOutAction}>
-              <button className="h-10 rounded-lg border border-stone-300 bg-white px-3 text-sm font-semibold">
-                Sign out
-              </button>
-            </form>
-          ) : (
-            <Link
-              href="/login"
-              className="flex h-10 items-center gap-2 rounded-lg bg-slate-950 px-3 text-sm font-semibold text-white"
-            >
-              <LogIn className="h-4 w-4" />
-              Login
-            </Link>
-          )}
+          <div className="flex shrink-0 items-center gap-2">
+            <LanguageSwitcher initialLocale={locale} label={t.common.language} />
+            {user ? (
+              <form action={signOutAction}>
+                <Button variant="secondary" size="compact">
+                  {t.common.signOut}
+                </Button>
+              </form>
+            ) : (
+              <Button asChild size="compact">
+                <Link href="/login">
+                  <LogIn className="h-4 w-4" />
+                  {t.common.login}
+                </Link>
+              </Button>
+            )}
+          </div>
         </div>
       </header>
 
@@ -181,19 +203,18 @@ export default async function Home({ searchParams }: PageProps) {
 
       {!hasSupabaseEnv() ? (
         <section className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
-          <p className="font-bold">Preview mode</p>
+          <p className="font-bold">{t.home.previewMode}</p>
           <p className="mt-1 leading-6">
-            Add Supabase environment variables to enable login, booking,
-            voucher use, and admin management.
+            {t.home.addSupabase}
           </p>
         </section>
       ) : null}
 
       <section className="mt-5 grid grid-cols-2 gap-3">
-        <div className="rounded-lg border border-stone-200 bg-white p-4">
+        <Card className="shadow-none">
           <div className="flex items-center gap-2 text-sm font-semibold text-slate-600">
             <Ticket className="h-4 w-4 text-cyan-700" />
-            Vouchers
+            {t.common.vouchers}
           </div>
           <p className="mt-2 text-3xl font-black">
             {vouchers.reduce(
@@ -201,45 +222,46 @@ export default async function Home({ searchParams }: PageProps) {
               0,
             )}
           </p>
-        </div>
-        <div className="rounded-lg border border-stone-200 bg-white p-4">
+        </Card>
+        <Card className="shadow-none">
           <div className="flex items-center gap-2 text-sm font-semibold text-slate-600">
             <Clock3 className="h-4 w-4 text-amber-700" />
-            Bookings
+            {t.common.bookings}
           </div>
           <p className="mt-2 text-3xl font-black">{userBookings.length}</p>
-        </div>
+        </Card>
       </section>
 
       {user ? (
-        <section className="mt-4 rounded-lg border border-stone-200 bg-white p-4">
+        <Card className="mt-4">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-sm font-semibold text-slate-500">
-                Signed in as
+                {t.home.signedInAs}
               </p>
               <p className="break-all text-sm font-bold">{user.email}</p>
             </div>
             {isAdmin ? (
-              <Link
-                href="/admin"
-                className="flex h-10 items-center gap-2 rounded-lg bg-cyan-800 px-3 text-sm font-semibold text-white"
-              >
-                <ShieldCheck className="h-4 w-4" />
-                Admin
-              </Link>
+              <Button asChild variant="accent" size="compact">
+                <Link href="/admin">
+                  <ShieldCheck className="h-4 w-4" />
+                  {t.common.admin}
+                </Link>
+              </Button>
             ) : null}
           </div>
-        </section>
+        </Card>
       ) : null}
 
       <section className="mt-6">
         <div className="mb-3 flex items-end justify-between gap-3">
           <div>
             <p className="text-sm font-semibold text-slate-500">
-              Malaysia time
+              {t.home.malaysiaTime}
             </p>
-            <h2 className="text-xl font-black">Open Classes</h2>
+            <h2 className="text-xl font-black">
+              {t.common.open} {t.common.classes}
+            </h2>
           </div>
           <span className="text-sm font-semibold text-slate-500">
             {openClasses.length}
@@ -252,11 +274,13 @@ export default async function Home({ searchParams }: PageProps) {
                 key={classItem.id}
                 classItem={classItem}
                 isSignedIn={Boolean(user)}
+                locale={locale}
+                t={t}
               />
             ))
           ) : (
             <p className="rounded-lg border border-stone-200 bg-white p-4 text-sm text-slate-600">
-              No open classes right now.
+              {t.home.noOpenClasses}
             </p>
           )}
         </div>
@@ -264,7 +288,7 @@ export default async function Home({ searchParams }: PageProps) {
 
       <section className="mt-7">
         <div className="mb-3 flex items-end justify-between gap-3">
-          <h2 className="text-xl font-black">Opening Soon</h2>
+          <h2 className="text-xl font-black">{t.common.openingSoon}</h2>
           <span className="text-sm font-semibold text-slate-500">
             {upcomingClasses.length}
           </span>
@@ -275,6 +299,8 @@ export default async function Home({ searchParams }: PageProps) {
               key={classItem.id}
               classItem={classItem}
               isSignedIn={Boolean(user)}
+              locale={locale}
+              t={t}
             />
           ))}
         </div>
@@ -282,7 +308,7 @@ export default async function Home({ searchParams }: PageProps) {
 
       {userBookings.length > 0 ? (
         <section className="mt-7">
-          <h2 className="mb-3 text-xl font-black">My Bookings</h2>
+          <h2 className="mb-3 text-xl font-black">{t.home.myBookings}</h2>
           <div className="grid gap-3">
             {userBookings.map((booking) => (
               <article
@@ -292,30 +318,30 @@ export default async function Home({ searchParams }: PageProps) {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="font-bold">
-                      {booking.classes?.title ?? "Class"}
+                      {booking.classes?.title ?? t.common.class}
                     </p>
                     {booking.classes?.starts_at ? (
                       <p className="mt-1 text-sm text-slate-600">
-                        {formatMalaysiaDateTime(booking.classes.starts_at)}
+                        {formatMalaysiaDateTime(
+                          booking.classes.starts_at,
+                          locale,
+                        )}
                       </p>
                     ) : null}
                   </div>
-                  <span className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-bold uppercase text-slate-700">
-                    {booking.status}
-                  </span>
+                  <Badge>{bookingStatusLabel(booking.status, t)}</Badge>
                 </div>
                 {booking.status === "pending" ? (
                   <div className="mt-3 flex gap-2 rounded-lg bg-amber-50 p-3 text-sm text-amber-950">
                     <Banknote className="mt-0.5 h-4 w-4 shrink-0" />
                     <p>
-                      Please transfer payment and wait for admin approval after
-                      deposit confirmation.
+                      {t.home.transferGuide}
                     </p>
                   </div>
                 ) : (
                   <div className="mt-3 flex gap-2 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-900">
                     <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
-                    <p>Your seat is confirmed.</p>
+                    <p>{t.home.seatConfirmed}</p>
                   </div>
                 )}
               </article>
@@ -326,7 +352,7 @@ export default async function Home({ searchParams }: PageProps) {
 
       {vouchers.length > 0 ? (
         <section className="mt-7">
-          <h2 className="mb-3 text-xl font-black">Active Vouchers</h2>
+          <h2 className="mb-3 text-xl font-black">{t.home.activeVouchers}</h2>
           <div className="grid gap-3">
             {vouchers.map((voucher) => (
               <article
@@ -335,10 +361,12 @@ export default async function Home({ searchParams }: PageProps) {
               >
                 <div className="flex items-center justify-between gap-3">
                   <p className="font-bold">
-                    {voucher.remaining_count}/{voucher.total_count} left
+                    {voucher.remaining_count}/{voucher.total_count}{" "}
+                    {t.common.left}
                   </p>
                   <p className="text-sm font-semibold text-slate-600">
-                    Expires {formatMalaysiaDate(voucher.expires_at)}
+                    {t.common.expires}{" "}
+                    {formatMalaysiaDate(voucher.expires_at, locale)}
                   </p>
                 </div>
               </article>
@@ -350,34 +378,30 @@ export default async function Home({ searchParams }: PageProps) {
       <section className="mt-7 rounded-lg border border-stone-200 bg-white p-4">
         <h2 className="flex items-center gap-2 text-lg font-black">
           <Banknote className="h-5 w-5 text-amber-700" />
-          Payment Guide
+          {t.home.paymentGuide}
         </h2>
         <p className="mt-2 text-sm leading-6 text-slate-600">
-          Members without an active voucher can submit a booking request first.
-          The booking remains pending until admin confirms the deposit.
+          {t.home.membersWithoutVoucher}
         </p>
       </section>
 
       <nav className="fixed inset-x-0 bottom-0 border-t border-stone-200 bg-white/95 px-4 py-2 backdrop-blur">
-        <div className="mx-auto grid max-w-3xl grid-cols-3 gap-2">
-          <a
-            href="#"
-            className="flex h-11 items-center justify-center rounded-lg bg-slate-950 text-sm font-bold text-white"
-          >
-            Classes
-          </a>
-          <Link
-            href="/login"
-            className="flex h-11 items-center justify-center rounded-lg text-sm font-bold text-slate-700"
-          >
-            Account
-          </Link>
-          <Link
-            href={isAdmin ? "/admin" : `mailto:${ADMIN_EMAIL}`}
-            className="flex h-11 items-center justify-center rounded-lg text-sm font-bold text-slate-700"
-          >
-            Admin
-          </Link>
+        <div
+          className={`mx-auto grid max-w-3xl gap-2 ${
+            isAdmin ? "grid-cols-3" : "grid-cols-2"
+          }`}
+        >
+          <Button asChild>
+            <a href="#">{t.common.classes}</a>
+          </Button>
+          <Button asChild variant="ghost">
+            <Link href="/login">{t.common.account}</Link>
+          </Button>
+          {isAdmin ? (
+            <Button asChild variant="ghost">
+              <Link href="/admin">{t.common.admin}</Link>
+            </Button>
+          ) : null}
         </div>
       </nav>
     </main>

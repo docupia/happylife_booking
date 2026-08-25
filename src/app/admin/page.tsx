@@ -24,6 +24,19 @@ import {
   formatMalaysiaDateTime,
   toMalaysiaLocalInputValue,
 } from "@/lib/time";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { LanguageSwitcher } from "@/components/language-switcher";
+import {
+  Input,
+  Select,
+  Textarea,
+  inputClassName,
+  textareaClassName,
+} from "@/components/ui/form";
+import { getI18n } from "@/lib/i18n-server";
+import { interpolate, type Dictionary } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -33,29 +46,42 @@ type AdminPageProps = {
   }>;
 };
 
-const inputClass =
-  "h-11 rounded-lg border border-stone-300 bg-white px-3 text-sm outline-none focus:border-cyan-700";
-const textAreaClass =
-  "min-h-24 rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm outline-none focus:border-cyan-700";
+function statusLabel(status: string, t: Dictionary) {
+  if (status === "open") {
+    return t.common.open;
+  }
+  if (status === "upcoming") {
+    return t.common.openingSoon;
+  }
+  if (status === "closed") {
+    return t.common.closed;
+  }
 
-function classBadge(status: string) {
-  const styles: Record<string, string> = {
-    open: "bg-emerald-100 text-emerald-800",
-    upcoming: "bg-amber-100 text-amber-900",
-    closed: "bg-slate-200 text-slate-600",
-  };
+  return status;
+}
 
-  return (
-    <span
-      className={`inline-flex h-7 items-center rounded-lg px-2.5 text-xs font-bold uppercase ${styles[status]}`}
-    >
-      {status}
-    </span>
-  );
+function bookingStatusLabel(status: string, t: Dictionary) {
+  if (status === "pending") {
+    return t.common.pending;
+  }
+  if (status === "confirmed") {
+    return t.common.confirmed;
+  }
+
+  return status;
+}
+
+function classBadge(status: string, t: Dictionary) {
+  if (status === "open" || status === "upcoming" || status === "closed") {
+    return <Badge variant={status}>{statusLabel(status, t)}</Badge>;
+  }
+
+  return <Badge>{status}</Badge>;
 }
 
 export default async function AdminPage({ searchParams }: AdminPageProps) {
   const params = await searchParams;
+  const { locale, t } = await getI18n();
   const { user, isAdmin } = await getSessionContext();
   const { classes, bookings, profiles, vouchers } = await getAdminData();
   const groupedClasses = {
@@ -74,16 +100,17 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         <Link
           href="/"
           className="mb-5 flex h-10 w-10 items-center justify-center rounded-lg border border-stone-300 bg-white"
-          aria-label="Back to classes"
+          aria-label={t.common.backToClasses}
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <section className="rounded-lg border border-amber-200 bg-amber-50 p-5 text-amber-950">
           <ShieldAlert className="h-6 w-6" />
-          <h1 className="mt-3 text-2xl font-black">Supabase required</h1>
+          <h1 className="mt-3 text-2xl font-black">
+            {t.admin.supabaseRequired}
+          </h1>
           <p className="mt-2 text-sm leading-6">
-            Connect Supabase environment variables and apply the migration
-            before using admin management.
+            {t.admin.connectSupabase}
           </p>
         </section>
       </main>
@@ -96,21 +123,20 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         <Link
           href="/"
           className="mb-5 flex h-10 w-10 items-center justify-center rounded-lg border border-stone-300 bg-white"
-          aria-label="Back to classes"
+          aria-label={t.common.backToClasses}
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <section className="rounded-lg border border-stone-200 bg-white p-5">
-          <h1 className="text-2xl font-black">Admin Login</h1>
+          <h1 className="text-2xl font-black">{t.admin.adminLogin}</h1>
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            Sign in with {ADMIN_EMAIL} to manage classes, bookings, students,
-            and vouchers.
+            {interpolate(t.admin.manageIntro, { email: ADMIN_EMAIL })}
           </p>
           <Link
             href="/login"
             className="mt-5 flex h-12 items-center justify-center rounded-lg bg-slate-950 text-sm font-bold text-white"
           >
-            Sign in
+            {t.common.signIn}
           </Link>
         </section>
       </main>
@@ -123,15 +149,15 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         <Link
           href="/"
           className="mb-5 flex h-10 w-10 items-center justify-center rounded-lg border border-stone-300 bg-white"
-          aria-label="Back to classes"
+          aria-label={t.common.backToClasses}
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <section className="rounded-lg border border-rose-200 bg-rose-50 p-5 text-rose-950">
           <ShieldAlert className="h-6 w-6" />
-          <h1 className="mt-3 text-2xl font-black">Access denied</h1>
+          <h1 className="mt-3 text-2xl font-black">{t.admin.accessDenied}</h1>
           <p className="mt-2 text-sm leading-6">
-            Admin access is limited to {ADMIN_EMAIL}.
+            {interpolate(t.admin.accessLimited, { email: ADMIN_EMAIL })}
           </p>
         </section>
       </main>
@@ -146,22 +172,25 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             <Link
               href="/"
               className="flex h-10 w-10 items-center justify-center rounded-lg border border-stone-300 bg-white"
-              aria-label="Back to classes"
+              aria-label={t.common.backToClasses}
             >
               <ArrowLeft className="h-5 w-5" />
             </Link>
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-cyan-800">
-                Admin
+                {t.common.admin}
               </p>
-              <h1 className="text-2xl font-black">Management</h1>
+              <h1 className="text-2xl font-black">{t.admin.management}</h1>
             </div>
           </div>
-          <form action={signOutAction}>
-            <button className="h-10 rounded-lg border border-stone-300 bg-white px-3 text-sm font-semibold">
-              Sign out
-            </button>
-          </form>
+          <div className="flex items-center gap-2">
+            <LanguageSwitcher initialLocale={locale} label={t.common.language} />
+            <form action={signOutAction}>
+              <Button variant="secondary" size="compact">
+                {t.common.signOut}
+              </Button>
+            </form>
+          </div>
         </div>
       </header>
 
@@ -172,77 +201,85 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
       ) : null}
 
       <section className="mt-5 grid grid-cols-3 gap-3">
-        <div className="rounded-lg border border-stone-200 bg-white p-4">
-          <p className="text-sm font-semibold text-slate-500">Open</p>
+        <Card className="shadow-none">
+          <p className="text-sm font-semibold text-slate-500">
+            {t.common.open}
+          </p>
           <p className="mt-1 text-3xl font-black">{groupedClasses.open.length}</p>
-        </div>
-        <div className="rounded-lg border border-stone-200 bg-white p-4">
-          <p className="text-sm font-semibold text-slate-500">Pending</p>
+        </Card>
+        <Card className="shadow-none">
+          <p className="text-sm font-semibold text-slate-500">
+            {t.common.pending}
+          </p>
           <p className="mt-1 text-3xl font-black">
             {bookings.filter((booking) => booking.status === "pending").length}
           </p>
-        </div>
-        <div className="rounded-lg border border-stone-200 bg-white p-4">
-          <p className="text-sm font-semibold text-slate-500">Students</p>
+        </Card>
+        <Card className="shadow-none">
+          <p className="text-sm font-semibold text-slate-500">
+            {t.admin.students}
+          </p>
           <p className="mt-1 text-3xl font-black">{profiles.length}</p>
-        </div>
+        </Card>
       </section>
 
-      <section className="mt-6 rounded-lg border border-stone-200 bg-white p-4">
+      <Card className="mt-6">
         <h2 className="flex items-center gap-2 text-xl font-black">
           <CalendarPlus className="h-5 w-5 text-cyan-800" />
-          Create Class
+          {t.admin.createClass}
         </h2>
         <form action={createClassAction} className="mt-4 grid gap-3 md:grid-cols-2">
           <label className="grid gap-1.5 text-sm font-semibold">
-            Title
-            <input name="title" required className={inputClass} />
+            {t.common.title}
+            <Input name="title" required />
           </label>
           <label className="grid gap-1.5 text-sm font-semibold">
-            Starts at
+            {t.admin.startsAt}
             <input
               name="startsAt"
               type="datetime-local"
               required
-              className={inputClass}
+              className={inputClassName}
             />
           </label>
           <label className="grid gap-1.5 text-sm font-semibold">
-            Location
-            <input name="location" required className={inputClass} />
+            {t.common.location}
+            <Input name="location" required />
           </label>
           <label className="grid gap-1.5 text-sm font-semibold">
-            Capacity
+            {t.common.capacity}
             <input
               name="capacity"
               type="number"
               min="1"
               required
-              className={inputClass}
+              className={inputClassName}
             />
           </label>
           <label className="grid gap-1.5 text-sm font-semibold">
-            Status
-            <select name="status" defaultValue="upcoming" className={inputClass}>
-              <option value="upcoming">Opening Soon</option>
-              <option value="open">Open</option>
-              <option value="closed">Closed</option>
-            </select>
+            {t.common.status}
+            <Select name="status" defaultValue="upcoming">
+              <option value="upcoming">{t.common.openingSoon}</option>
+              <option value="open">{t.common.open}</option>
+              <option value="closed">{t.common.closed}</option>
+            </Select>
           </label>
           <label className="grid gap-1.5 text-sm font-semibold md:col-span-2">
-            Summary
-            <textarea name="summary" required className={textAreaClass} />
+            {t.common.summary}
+            <Textarea name="summary" required />
           </label>
-          <button className="h-11 rounded-lg bg-slate-950 px-4 text-sm font-bold text-white md:col-span-2">
-            Create
-          </button>
+          <Button className="md:col-span-2">
+            {t.common.create}
+          </Button>
         </form>
-      </section>
+      </Card>
 
       {(["open", "upcoming", "closed"] as const).map((status) => (
         <section key={status} className="mt-7">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-xl font-black capitalize">{status} Classes</h2>
+            <h2 className="text-xl font-black">
+              {statusLabel(status, t)} {t.common.classes}
+            </h2>
             <span className="text-sm font-bold text-slate-500">
               {groupedClasses[status].length}
             </span>
@@ -250,7 +287,9 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           <div className="grid gap-4">
             {groupedClasses[status].length === 0 ? (
               <p className="rounded-lg border border-stone-200 bg-white p-4 text-sm text-slate-600">
-                No {status} classes.
+                {interpolate(t.admin.noClasses, {
+                  status: statusLabel(status, t),
+                })}
               </p>
             ) : null}
             {groupedClasses[status].map((classItem) => {
@@ -274,15 +313,18 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                         {classItem.location}
                       </p>
                     </div>
-                    {classBadge(classItem.effective_status)}
+                    {classBadge(classItem.effective_status, t)}
                   </div>
 
                   <div className="mt-3 grid gap-1 text-sm text-slate-700">
-                    <p>{formatMalaysiaDateTime(classItem.starts_at)} MYT</p>
                     <p>
-                      {classItem.confirmed_count}/{classItem.capacity} confirmed
+                      {formatMalaysiaDateTime(classItem.starts_at, locale)} MYT
+                    </p>
+                    <p>
+                      {classItem.confirmed_count}/{classItem.capacity}{" "}
+                      {t.common.confirmed}
                       {classItem.pending_count > 0
-                        ? `, ${classItem.pending_count} pending`
+                        ? `, ${classItem.pending_count} ${t.common.pending}`
                         : ""}
                     </p>
                     <p>{classItem.summary}</p>
@@ -290,7 +332,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
                   <details className="mt-4 rounded-lg border border-stone-200 bg-stone-50 p-3">
                     <summary className="cursor-pointer text-sm font-bold">
-                      Edit class
+                      {t.admin.editClass}
                     </summary>
                     <form
                       action={updateClassAction}
@@ -298,16 +340,16 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                     >
                       <input type="hidden" name="classId" value={classItem.id} />
                       <label className="grid gap-1.5 text-sm font-semibold">
-                        Title
+                        {t.common.title}
                         <input
                           name="title"
                           required
                           defaultValue={classItem.title}
-                          className={inputClass}
+                          className={inputClassName}
                         />
                       </label>
                       <label className="grid gap-1.5 text-sm font-semibold">
-                        Starts at
+                        {t.admin.startsAt}
                         <input
                           name="startsAt"
                           type="datetime-local"
@@ -315,65 +357,65 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                           defaultValue={toMalaysiaLocalInputValue(
                             classItem.starts_at,
                           )}
-                          className={inputClass}
+                          className={inputClassName}
                         />
                       </label>
                       <label className="grid gap-1.5 text-sm font-semibold">
-                        Location
+                        {t.common.location}
                         <input
                           name="location"
                           required
                           defaultValue={classItem.location}
-                          className={inputClass}
+                          className={inputClassName}
                         />
                       </label>
                       <label className="grid gap-1.5 text-sm font-semibold">
-                        Capacity
+                        {t.common.capacity}
                         <input
                           name="capacity"
                           type="number"
                           min="1"
                           required
                           defaultValue={classItem.capacity}
-                          className={inputClass}
+                          className={inputClassName}
                         />
                       </label>
                       <label className="grid gap-1.5 text-sm font-semibold">
-                        Status
+                        {t.common.status}
                         <select
                           name="status"
                           defaultValue={classItem.status}
-                          className={inputClass}
+                          className={inputClassName}
                         >
-                          <option value="upcoming">Opening Soon</option>
-                          <option value="open">Open</option>
-                          <option value="closed">Closed</option>
+                          <option value="upcoming">{t.common.openingSoon}</option>
+                          <option value="open">{t.common.open}</option>
+                          <option value="closed">{t.common.closed}</option>
                         </select>
                       </label>
                       <label className="grid gap-1.5 text-sm font-semibold md:col-span-2">
-                        Summary
+                        {t.common.summary}
                         <textarea
                           name="summary"
                           required
                           defaultValue={classItem.summary}
-                          className={textAreaClass}
+                          className={textareaClassName}
                         />
                       </label>
-                      <button className="h-11 rounded-lg bg-slate-950 px-4 text-sm font-bold text-white md:col-span-2">
-                        Save changes
-                      </button>
+                      <Button className="md:col-span-2">
+                        {t.common.saveChanges}
+                      </Button>
                     </form>
                   </details>
 
                   <div className="mt-4">
                     <h4 className="flex items-center gap-2 text-sm font-black uppercase text-slate-500">
                       <UsersRound className="h-4 w-4" />
-                      Student List
+                      {t.admin.studentList}
                     </h4>
                     <div className="mt-2 grid gap-2">
                       {classBookings.length === 0 ? (
                         <p className="rounded-lg bg-stone-50 p-3 text-sm text-slate-600">
-                          No bookings yet.
+                          {t.admin.noBookings}
                         </p>
                       ) : null}
                       {classBookings.map((booking) => (
@@ -386,15 +428,13 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                               <p className="break-all text-sm font-bold">
                                 {booking.profiles?.full_name ||
                                   booking.profiles?.email ||
-                                  "Student"}
+                                  t.common.student}
                               </p>
                               <p className="break-all text-xs text-slate-500">
                                 {booking.profiles?.email}
                               </p>
                             </div>
-                            <span className="rounded-lg bg-slate-100 px-2 py-1 text-xs font-bold uppercase">
-                              {booking.status}
-                            </span>
+                            <Badge>{bookingStatusLabel(booking.status, t)}</Badge>
                           </div>
                           {booking.status === "pending" ? (
                             <form action={approveBookingAction} className="mt-3">
@@ -403,10 +443,10 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                                 name="bookingId"
                                 value={booking.id}
                               />
-                              <button className="flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-emerald-700 text-sm font-bold text-white">
+                              <Button variant="success" size="compact" className="w-full">
                                 <Check className="h-4 w-4" />
-                                Approve after deposit
-                              </button>
+                                {t.common.approve}
+                              </Button>
                             </form>
                           ) : null}
                         </div>
@@ -414,8 +454,9 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                     </div>
                     {pendingBookings.length > 0 ? (
                       <p className="mt-2 text-xs font-semibold text-amber-800">
-                        {pendingBookings.length} booking request needs deposit
-                        confirmation.
+                        {interpolate(t.admin.pendingDeposit, {
+                          count: pendingBookings.length,
+                        })}
                       </p>
                     ) : null}
                   </div>
@@ -426,57 +467,57 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         </section>
       ))}
 
-      <section className="mt-8 rounded-lg border border-stone-200 bg-white p-4">
+      <Card className="mt-8">
         <h2 className="flex items-center gap-2 text-xl font-black">
           <TicketPlus className="h-5 w-5 text-cyan-800" />
-          Student Vouchers
+          {t.admin.studentVouchers}
         </h2>
         <form action={grantVoucherAction} className="mt-4 grid gap-3 md:grid-cols-2">
           <label className="grid gap-1.5 text-sm font-semibold">
-            Student
-            <select name="userId" required className={inputClass}>
-              <option value="">Select student</option>
+            {t.common.student}
+            <Select name="userId" required>
+              <option value="">{t.admin.selectStudent}</option>
               {profiles.map((profile) => (
                 <option key={profile.id} value={profile.id}>
                   {profile.full_name || profile.email}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
           <label className="grid gap-1.5 text-sm font-semibold">
-            Voucher count
+            {t.admin.voucherCount}
             <input
               name="count"
               type="number"
               min="1"
               defaultValue="1"
               required
-              className={inputClass}
+              className={inputClassName}
             />
           </label>
           <label className="grid gap-1.5 text-sm font-semibold">
-            Expire date
+            {t.common.expireDate}
             <input
               name="expiresAt"
               type="date"
               defaultValue={defaultVoucherExpiryDate()}
               required
-              className={inputClass}
+              className={inputClassName}
             />
           </label>
           <label className="grid gap-1.5 text-sm font-semibold">
-            Note
-            <input name="note" className={inputClass} />
+            {t.common.note}
+            <Input name="note" />
           </label>
-          <button className="h-11 rounded-lg bg-slate-950 px-4 text-sm font-bold text-white md:col-span-2">
-            Add voucher
-          </button>
+          <Button className="md:col-span-2">
+            {t.admin.addVoucher}
+          </Button>
         </form>
 
         <div className="mt-5 grid gap-2">
           {vouchers.length === 0 ? (
             <p className="rounded-lg bg-stone-50 p-3 text-sm text-slate-600">
-              No vouchers registered yet.
+              {t.admin.noVouchers}
             </p>
           ) : null}
           {vouchers.map((voucher) => (
@@ -489,10 +530,11 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                   <p className="break-all text-sm font-bold">
                     {voucher.profiles?.full_name ||
                       voucher.profiles?.email ||
-                      "Student"}
+                      t.common.student}
                   </p>
                   <p className="text-xs text-slate-500">
-                    Expires {formatMalaysiaDate(voucher.expires_at)}
+                    {t.common.expires}{" "}
+                    {formatMalaysiaDate(voucher.expires_at, locale)}
                   </p>
                 </div>
                 <span className="rounded-lg bg-cyan-50 px-2.5 py-1 text-sm font-black text-cyan-900">
@@ -502,7 +544,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             </article>
           ))}
         </div>
-      </section>
+      </Card>
     </main>
   );
 }

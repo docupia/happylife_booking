@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { ADMIN_EMAIL } from "@/lib/config";
+import { getI18n } from "@/lib/i18n-server";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { toMalaysiaIsoFromLocalInput } from "@/lib/time";
 
@@ -68,7 +69,7 @@ export async function signUpAction(formData: FormData) {
     redirect(`/login?mode=signup&message=${encodeURIComponent(error.message)}`);
   }
 
-  redirect("/?message=Check your email if confirmation is enabled.");
+  redirect(`/login/check-email?email=${encodeURIComponent(email)}`);
 }
 
 export async function signOutAction() {
@@ -79,6 +80,7 @@ export async function signOutAction() {
 
 export async function requestBookingAction(formData: FormData) {
   const supabase = await requireSupabase();
+  const { t } = await getI18n();
   const classId = getString(formData, "classId");
 
   const { error } = await supabase.rpc("request_booking", {
@@ -90,15 +92,12 @@ export async function requestBookingAction(formData: FormData) {
   }
 
   revalidatePath("/");
-  redirect(
-    `/?message=${encodeURIComponent(
-      "Booking received. Voucher bookings are confirmed immediately; otherwise please follow the bank transfer guide.",
-    )}`,
-  );
+  redirect(`/?message=${encodeURIComponent(t.home.bookingReceived)}`);
 }
 
 export async function createClassAction(formData: FormData) {
   const supabase = await requireAdmin();
+  const { t } = await getI18n();
   const title = getString(formData, "title");
   const startsAt = toMalaysiaIsoFromLocalInput(formData.get("startsAt"));
   const capacity = Number(getString(formData, "capacity"));
@@ -117,11 +116,12 @@ export async function createClassAction(formData: FormData) {
   }
 
   revalidatePath("/admin");
-  redirect("/admin?message=Class created.");
+  redirect(`/admin?message=${encodeURIComponent(t.admin.classCreated)}`);
 }
 
 export async function updateClassAction(formData: FormData) {
   const supabase = await requireAdmin();
+  const { t } = await getI18n();
   const classId = getString(formData, "classId");
   const startsAt = toMalaysiaIsoFromLocalInput(formData.get("startsAt"));
 
@@ -142,11 +142,12 @@ export async function updateClassAction(formData: FormData) {
   }
 
   revalidatePath("/admin");
-  redirect("/admin?message=Class updated.");
+  redirect(`/admin?message=${encodeURIComponent(t.admin.classUpdated)}`);
 }
 
 export async function approveBookingAction(formData: FormData) {
   const supabase = await requireAdmin();
+  const { t } = await getI18n();
   const bookingId = getString(formData, "bookingId");
 
   const { error } = await supabase.rpc("approve_booking", {
@@ -158,11 +159,12 @@ export async function approveBookingAction(formData: FormData) {
   }
 
   revalidatePath("/admin");
-  redirect("/admin?message=Booking approved.");
+  redirect(`/admin?message=${encodeURIComponent(t.common.approve)}`);
 }
 
 export async function grantVoucherAction(formData: FormData) {
   const supabase = await requireAdmin();
+  const { t } = await getI18n();
   const userId = getString(formData, "userId");
   const count = Number(getString(formData, "count") || "1");
   const expiresAt = getString(formData, "expiresAt");
@@ -180,5 +182,5 @@ export async function grantVoucherAction(formData: FormData) {
   }
 
   revalidatePath("/admin");
-  redirect("/admin?message=Voucher added.");
+  redirect(`/admin?message=${encodeURIComponent(t.admin.voucherAdded)}`);
 }

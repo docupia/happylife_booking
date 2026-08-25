@@ -1,31 +1,32 @@
 import { MALAYSIA_TIME_ZONE } from "./config";
+import type { Locale } from "./i18n";
 
 export type ClassStatus = "upcoming" | "open" | "closed";
 
-const dateTimeFormatter = new Intl.DateTimeFormat("en-MY", {
-  timeZone: MALAYSIA_TIME_ZONE,
-  weekday: "short",
-  day: "2-digit",
-  month: "short",
-  year: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-  hour12: false,
-});
-
-const dateFormatter = new Intl.DateTimeFormat("en-MY", {
-  timeZone: MALAYSIA_TIME_ZONE,
-  day: "2-digit",
-  month: "short",
-  year: "numeric",
-});
-
-export function formatMalaysiaDateTime(value: string | Date) {
-  return dateTimeFormatter.format(new Date(value));
+function intlLocale(locale: Locale = "en") {
+  return locale === "ko" ? "ko-KR" : "en-MY";
 }
 
-export function formatMalaysiaDate(value: string | Date) {
-  return dateFormatter.format(new Date(value));
+export function formatMalaysiaDateTime(value: string | Date, locale: Locale = "en") {
+  return new Intl.DateTimeFormat(intlLocale(locale), {
+    timeZone: MALAYSIA_TIME_ZONE,
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(new Date(value));
+}
+
+export function formatMalaysiaDate(value: string | Date, locale: Locale = "en") {
+  return new Intl.DateTimeFormat(intlLocale(locale), {
+    timeZone: MALAYSIA_TIME_ZONE,
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(value));
 }
 
 export function getEffectiveClassStatus(

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="HappyLife">
+  <rect width="512" height="512" rx="112" fill="#155e75"/>
+  <circle cx="256" cy="184" r="72" fill="#fef3c7"/>
+  <path fill="#fff" d="M132 328c34-56 72-84 124-84s90 28 124 84c13 22-3 50-29 50H161c-26 0-42-28-29-50Z"/>
+  <path fill="#10b981" d="M188 173c21 24 43 36 68 36s47-12 68-36c-12 48-35 72-68 72s-56-24-68-72Z"/>
+</svg>
