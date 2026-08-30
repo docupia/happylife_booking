@@ -7,7 +7,6 @@ import {
   MapPin,
   ShieldCheck,
   Ticket,
-  UserRound,
 } from "lucide-react";
 
 import { requestBookingAction, signOutAction } from "./actions";
@@ -109,16 +108,6 @@ function ClassCard({
         <div className="flex items-center gap-2">
           <MapPin className="h-4 w-4 text-rose-700" />
           <span>{classItem.location}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <UserRound className="h-4 w-4 text-slate-500" />
-          <span>
-            {classItem.confirmed_count}/{classItem.capacity}{" "}
-            {t.common.confirmed}
-            {classItem.pending_count > 0
-              ? `, ${classItem.pending_count} ${t.common.pending}`
-              : ""}
-          </span>
         </div>
       </div>
 
