@@ -26,6 +26,11 @@ export function RealtimeRefresh({
     }
 
     const supabase = createSupabaseBrowserClient();
+
+    if (!supabase) {
+      return;
+    }
+
     const channel = supabase
       .channel("booking-screen-sync")
       .on(

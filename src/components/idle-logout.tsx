@@ -29,8 +29,13 @@ export function IdleLogout({
   const router = useRouter();
 
   useEffect(() => {
-    const supabase = createSupabaseBrowserClient();
     const t = getDictionary(initialLocale);
+    const supabase = createSupabaseBrowserClient();
+
+    if (!supabase) {
+      return;
+    }
+    const activeSupabase = supabase;
 
     function getLastActivity() {
       return Number(
@@ -43,7 +48,7 @@ export function IdleLogout({
     }
 
     async function redirectToLogin(message: string) {
-      await supabase.auth.signOut();
+      await activeSupabase.auth.signOut();
       window.localStorage.removeItem(HAD_SESSION_KEY);
       router.replace(`/login?message=${encodeURIComponent(message)}`);
       router.refresh();
@@ -69,7 +74,7 @@ export function IdleLogout({
 
       const {
         data: { session },
-      } = await supabase.auth.getSession();
+      } = await activeSupabase.auth.getSession();
 
       if (!session) {
         await redirectToLogin(t.auth.sessionExpired);
@@ -94,7 +99,7 @@ export function IdleLogout({
     });
 
     const timer = window.setInterval(checkSession, 60 * 1000);
-    const { data: subscription } = supabase.auth.onAuthStateChange((event) => {
+    const { data: subscription } = activeSupabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_OUT") {
         window.localStorage.removeItem(HAD_SESSION_KEY);
         router.replace(`/login?message=${encodeURIComponent(t.auth.signedOut)}`);
