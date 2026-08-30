@@ -9,7 +9,7 @@ begin
     create type public.booking_status as enum ('pending', 'confirmed', 'cancelled');
   end if;
   if not exists (select 1 from pg_type where typname = 'payment_status') then
-    create type public.payment_status as enum ('unpaid', 'payment_confirmed', 'voucher');
+    create type public.payment_status as enum ('unpaid', 'payment_confirmed');
   end if;
 end $$;
 
@@ -40,24 +40,12 @@ create table if not exists public.classes (
   updated_at timestamptz not null default now()
 );
 
-create table if not exists public.vouchers (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references public.profiles(id) on delete cascade,
-  total_count integer not null check (total_count > 0),
-  remaining_count integer not null check (remaining_count >= 0),
-  expires_at date not null,
-  note text,
-  created_at timestamptz not null default now(),
-  constraint vouchers_remaining_not_above_total check (remaining_count <= total_count)
-);
-
 create table if not exists public.bookings (
   id uuid primary key default gen_random_uuid(),
   class_id uuid not null references public.classes(id) on delete cascade,
   user_id uuid not null references public.profiles(id) on delete cascade,
   status public.booking_status not null default 'pending',
   payment_status public.payment_status not null default 'unpaid',
-  used_voucher_id uuid references public.vouchers(id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -69,7 +57,6 @@ create unique index if not exists bookings_one_active_per_class
 create index if not exists classes_starts_at_idx on public.classes(starts_at);
 create index if not exists bookings_class_id_idx on public.bookings(class_id);
 create index if not exists bookings_user_id_idx on public.bookings(user_id);
-create index if not exists vouchers_user_id_idx on public.vouchers(user_id);
 
 create or replace function public.touch_updated_at()
 returns trigger
@@ -119,8 +106,7 @@ for each row execute function public.handle_new_user();
 create or replace function public.request_booking(input_class_id uuid)
 returns table (
   booking_id uuid,
-  booking_status public.booking_status,
-  used_voucher boolean
+  booking_status public.booking_status
 )
 language plpgsql
 security definer
@@ -130,10 +116,7 @@ declare
   current_user_id uuid := auth.uid();
   class_record public.classes%rowtype;
   confirmed_count integer;
-  voucher_record public.vouchers%rowtype;
   new_booking_id uuid;
-  new_status public.booking_status;
-  voucher_was_used boolean := false;
 begin
   if current_user_id is null then
     raise exception 'Login required.';
@@ -174,57 +157,21 @@ begin
     raise exception 'This class is full.';
   end if;
 
-  select * into voucher_record
-  from public.vouchers
-  where user_id = current_user_id
-    and remaining_count > 0
-    and expires_at >= (now() at time zone 'Asia/Kuala_Lumpur')::date
-  order by expires_at asc, created_at asc
-  for update skip locked
-  limit 1;
+  insert into public.bookings (
+    class_id,
+    user_id,
+    status,
+    payment_status
+  )
+  values (
+    input_class_id,
+    current_user_id,
+    'pending',
+    'unpaid'
+  )
+  returning id into new_booking_id;
 
-  if found then
-    update public.vouchers
-    set remaining_count = remaining_count - 1
-    where id = voucher_record.id;
-
-    new_status := 'confirmed';
-    voucher_was_used := true;
-
-    insert into public.bookings (
-      class_id,
-      user_id,
-      status,
-      payment_status,
-      used_voucher_id
-    )
-    values (
-      input_class_id,
-      current_user_id,
-      'confirmed',
-      'voucher',
-      voucher_record.id
-    )
-    returning id into new_booking_id;
-  else
-    new_status := 'pending';
-
-    insert into public.bookings (
-      class_id,
-      user_id,
-      status,
-      payment_status
-    )
-    values (
-      input_class_id,
-      current_user_id,
-      'pending',
-      'unpaid'
-    )
-    returning id into new_booking_id;
-  end if;
-
-  return query select new_booking_id, new_status, voucher_was_used;
+  return query select new_booking_id, 'pending'::public.booking_status;
 end;
 $$;
 
@@ -284,7 +231,6 @@ $$;
 alter table public.profiles enable row level security;
 alter table public.classes enable row level security;
 alter table public.bookings enable row level security;
-alter table public.vouchers enable row level security;
 
 drop policy if exists "profiles select own or admin" on public.profiles;
 create policy "profiles select own or admin"
@@ -329,32 +275,11 @@ to authenticated
 using (public.is_admin())
 with check (public.is_admin());
 
-drop policy if exists "vouchers select own or admin" on public.vouchers;
-create policy "vouchers select own or admin"
-on public.vouchers for select
-to authenticated
-using (user_id = auth.uid() or public.is_admin());
-
-drop policy if exists "vouchers admin insert" on public.vouchers;
-create policy "vouchers admin insert"
-on public.vouchers for insert
-to authenticated
-with check (public.is_admin());
-
-drop policy if exists "vouchers admin update" on public.vouchers;
-create policy "vouchers admin update"
-on public.vouchers for update
-to authenticated
-using (public.is_admin())
-with check (public.is_admin());
-
 grant usage on schema public to anon, authenticated;
 grant select on public.classes to anon, authenticated;
 grant select, update on public.profiles to authenticated;
 grant select on public.bookings to authenticated;
-grant select on public.vouchers to authenticated;
 grant insert, update on public.classes to authenticated;
-grant insert, update on public.vouchers to authenticated;
 grant update on public.bookings to authenticated;
 grant execute on function public.request_booking(uuid) to authenticated;
 grant execute on function public.approve_booking(uuid) to authenticated;

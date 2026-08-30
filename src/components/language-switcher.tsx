@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -15,11 +15,14 @@ export function LanguageSwitcher({
 }) {
   const router = useRouter();
   const [locale, setLocale] = useState<Locale>(initialLocale);
+  const [isPending, startTransition] = useTransition();
 
   function chooseLocale(nextLocale: Locale) {
     document.cookie = `hl_locale=${nextLocale}; path=/; max-age=31536000; samesite=lax`;
     setLocale(nextLocale);
-    router.refresh();
+    startTransition(() => {
+      router.refresh();
+    });
   }
 
   return (
@@ -32,18 +35,20 @@ export function LanguageSwitcher({
         size="compact"
         variant={locale === "en" ? "default" : "ghost"}
         className="h-8 px-2 text-xs"
+        disabled={isPending}
         onClick={() => chooseLocale("en")}
       >
-        EN
+        {isPending && locale === "en" ? "EN..." : "EN"}
       </Button>
       <Button
         type="button"
         size="compact"
         variant={locale === "ko" ? "default" : "ghost"}
         className="h-8 px-2 text-xs"
+        disabled={isPending}
         onClick={() => chooseLocale("ko")}
       >
-        한글
+        {isPending && locale === "ko" ? "변경 중..." : "한글"}
       </Button>
     </div>
   );

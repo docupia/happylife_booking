@@ -38,11 +38,6 @@ export function RealtimeRefresh({
         { event: "*", schema: "public", table: "bookings" },
         scheduleRefresh,
       )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "vouchers" },
-        scheduleRefresh,
-      )
       .subscribe((status) => {
         setIsSynced(status === "SUBSCRIBED");
       });

@@ -64,25 +64,3 @@ export function toMalaysiaLocalInputValue(value: string) {
 
   return `${map.year}-${map.month}-${map.day}T${map.hour}:${map.minute}`;
 }
-
-export function defaultVoucherExpiryDate() {
-  const now = new Date();
-  const formatter = new Intl.DateTimeFormat("en-CA", {
-    timeZone: MALAYSIA_TIME_ZONE,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
-  const parts = Object.fromEntries(
-    formatter.formatToParts(now).map((part) => [part.type, part.value]),
-  );
-  const malaysiaDate = new Date(
-    Number(parts.year),
-    Number(parts.month) - 1,
-    Number(parts.day),
-  );
-
-  malaysiaDate.setMonth(malaysiaDate.getMonth() + 1);
-
-  return malaysiaDate.toISOString().slice(0, 10);
-}

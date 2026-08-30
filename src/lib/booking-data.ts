@@ -25,22 +25,10 @@ export type BookingRow = {
   class_id: string;
   user_id: string;
   status: "pending" | "confirmed" | "cancelled";
-  payment_status: "unpaid" | "payment_confirmed" | "voucher";
-  used_voucher_id: string | null;
+  payment_status: "unpaid" | "payment_confirmed";
   created_at: string;
   profiles?: Pick<Profile, "email" | "full_name"> | null;
   classes?: Pick<ClassRow, "title" | "starts_at"> | null;
-};
-
-export type VoucherRow = {
-  id: string;
-  user_id: string;
-  total_count: number;
-  remaining_count: number;
-  expires_at: string;
-  note: string | null;
-  created_at: string;
-  profiles?: Pick<Profile, "email" | "full_name"> | null;
 };
 
 export type ClassWithCounts = ClassRow & {
@@ -157,29 +145,6 @@ export async function getCurrentUserBookings(userId: string) {
   return (data ?? []) as BookingRow[];
 }
 
-export async function getCurrentUserVouchers(userId: string) {
-  const { supabase } = await getSessionContext();
-
-  if (!supabase) {
-    return [];
-  }
-
-  const { data, error } = await supabase
-    .from("vouchers")
-    .select("*")
-    .eq("user_id", userId)
-    .gt("remaining_count", 0)
-    .gte("expires_at", new Date().toISOString().slice(0, 10))
-    .order("expires_at", { ascending: true });
-
-  if (error) {
-    console.error(error);
-    return [];
-  }
-
-  return (data ?? []) as VoucherRow[];
-}
-
 export async function getAdminData() {
   const { supabase, isAdmin } = await getSessionContext();
 
@@ -188,11 +153,10 @@ export async function getAdminData() {
       classes: [] as ClassWithCounts[],
       bookings: [] as BookingRow[],
       profiles: [] as Profile[],
-      vouchers: [] as VoucherRow[],
     };
   }
 
-  const [classes, bookings, profiles, vouchers] = await Promise.all([
+  const [classes, bookings, profiles] = await Promise.all([
     getClasses(),
     supabase
       .from("bookings")
@@ -202,10 +166,6 @@ export async function getAdminData() {
       .from("profiles")
       .select("*")
       .order("created_at", { ascending: false }),
-    supabase
-      .from("vouchers")
-      .select("*, profiles(email, full_name)")
-      .order("created_at", { ascending: false }),
   ]);
 
   if (bookings.error) {
@@ -214,14 +174,10 @@ export async function getAdminData() {
   if (profiles.error) {
     console.error(profiles.error);
   }
-  if (vouchers.error) {
-    console.error(vouchers.error);
-  }
 
   return {
     classes,
     bookings: ((bookings.data ?? []) as BookingRow[]).filter(Boolean),
     profiles: (profiles.data ?? []) as Profile[],
-    vouchers: (vouchers.data ?? []) as VoucherRow[],
   };
 }

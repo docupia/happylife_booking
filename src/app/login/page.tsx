@@ -3,7 +3,9 @@ import { ArrowLeft, LogIn, UserPlus } from "lucide-react";
 
 import { signInAction, signUpAction } from "../actions";
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Card } from "@/components/ui/card";
+import { IdleActivityReset } from "@/components/idle-activity-reset";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { Input } from "@/components/ui/form";
 import { hasSupabaseEnv } from "@/lib/config";
@@ -25,6 +27,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5">
+      <IdleActivityReset />
       <div className="mb-5 flex items-center justify-between gap-3">
         <Button asChild variant="secondary" size="icon">
           <Link href="/" aria-label={t.common.backToClasses}>
@@ -93,9 +96,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               placeholder={t.auth.atLeastCharacters}
             />
           </label>
-          <Button
-            type="submit"
+          <SubmitButton
             className="mt-2 h-12"
+            pendingText={isSignup ? t.common.signingUp : t.common.signingIn}
           >
             {isSignup ? (
               <>
@@ -108,7 +111,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                 {t.common.signIn}
               </>
             )}
-          </Button>
+          </SubmitButton>
         </form>
 
         <div className="mt-5 rounded-lg bg-stone-50 p-3 text-center text-sm">

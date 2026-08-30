@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { PwaInstallPrompt } from "@/components/pwa-install-prompt";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
+import { IdleLogout } from "@/components/idle-logout";
+import { getSessionContext } from "@/lib/booking-data";
 import { getLocale } from "@/lib/i18n-server";
 import "./globals.css";
 
@@ -35,6 +37,7 @@ export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const locale = await getLocale();
+  const { user } = await getSessionContext();
 
   return (
     <html
@@ -42,6 +45,7 @@ export default async function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full scroll-smooth antialiased`}
     >
       <body className="min-h-full bg-stone-50 text-slate-950">
+        <IdleLogout enabled={Boolean(user)} initialLocale={locale} />
         <RealtimeRefresh initialLocale={locale} />
         {children}
         <PwaInstallPrompt initialLocale={locale} />

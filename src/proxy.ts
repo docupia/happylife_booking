@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { hasSupabaseEnv } from "./lib/config";
+import { getDictionary, isLocale } from "./lib/i18n";
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({
@@ -35,7 +36,19 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user && request.nextUrl.pathname.startsWith("/admin")) {
+    const localeCookie = request.cookies.get("hl_locale")?.value;
+    const locale = isLocale(localeCookie) ? localeCookie : "en";
+    const t = getDictionary(locale);
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = "/login";
+    redirectUrl.searchParams.set("message", t.auth.sessionExpired);
+    return NextResponse.redirect(redirectUrl);
+  }
 
   return response;
 }

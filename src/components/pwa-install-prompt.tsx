@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Download, X } from "lucide-react";
+import { Download, Loader2, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { getDictionary, type Locale } from "@/lib/i18n";
@@ -22,6 +22,7 @@ export function PwaInstallPrompt({
   const [installEvent, setInstallEvent] =
     useState<BeforeInstallPromptEvent | null>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const [isInstalling, setIsInstalling] = useState(false);
 
   useEffect(() => {
     if ("serviceWorker" in navigator) {
@@ -55,8 +56,10 @@ export function PwaInstallPrompt({
       return;
     }
 
+    setIsInstalling(true);
     await installEvent.prompt();
     const choice = await installEvent.userChoice;
+    setIsInstalling(false);
 
     if (choice.outcome === "accepted") {
       setIsVisible(false);
@@ -81,13 +84,22 @@ export function PwaInstallPrompt({
             {t.pwa.addHome}
           </p>
           <div className="mt-3 grid grid-cols-[1fr_auto] gap-2">
-            <Button type="button" size="compact" onClick={installApp}>
-              {t.pwa.install}
+            <Button
+              type="button"
+              size="compact"
+              disabled={isInstalling}
+              onClick={installApp}
+            >
+              {isInstalling ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : null}
+              {isInstalling ? t.pwa.installing : t.pwa.install}
             </Button>
             <Button
               type="button"
               variant="ghost"
               size="icon"
+              disabled={isInstalling}
               onClick={dismiss}
               aria-label={t.pwa.dismissInstall}
             >

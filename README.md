@@ -10,26 +10,27 @@ Mobile-first class booking management built with Next.js, Supabase Auth/DB, and 
 - Class create/edit with Open, Opening Soon, and Closed status
 - Automatic effective Closed status after the class start time
 - Booking requests with capacity checks
-- Voucher bookings confirmed immediately with one voucher deducted
-- Non-voucher bookings stay Pending until admin deposit approval
-- Student list and voucher registration with a default one-month expiry
+- All member booking requests stay Pending until admin deposit approval
+- Student list by class with admin approval controls
 - Malaysia time display and date handling
 - PWA install support with a home-screen install prompt
-- Supabase Realtime refresh for class, booking, and voucher changes
+- Supabase Realtime refresh for class and booking changes
+- English and Korean language selection
 
 ## Local Setup
 
 1. Create a Supabase project.
 2. Run `supabase/migrations/001_initial_schema.sql` in the Supabase SQL editor, or use the Supabase CLI to push it.
 3. Run `supabase/migrations/002_enable_realtime.sql` to enable live updates for class capacity and booking status changes.
-4. Copy `.env.example` to `.env.local` and fill in:
+4. Run `supabase/migrations/003_pending_approval_bookings.sql` if an earlier automatic-confirmation booking function was applied.
+5. Copy `.env.example` to `.env.local` and fill in:
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=https://cfpsvjetsfokdorxkjwn.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_nrHcfkBpG7PG7UNDHyt0yg_--fGABoS
 ```
 
-5. Install and run:
+6. Install and run:
 
 ```bash
 npm install
@@ -59,4 +60,4 @@ Do not add the direct database connection string to Vercel. It is only for datab
 
 The app registers `public/sw.js` and exposes `/manifest.webmanifest`, so supported mobile browsers can show an install prompt and add HappyLife to the home screen.
 
-Realtime subscriptions listen to `classes`, `bookings`, and `vouchers`. The database RPC functions still enforce duplicate booking and capacity rules; Realtime only keeps mobile screens visually up to date.
+Realtime subscriptions listen to `classes` and `bookings`. The database RPC functions still enforce duplicate booking and capacity rules; Realtime only keeps mobile screens visually up to date.

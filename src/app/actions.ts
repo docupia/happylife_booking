@@ -74,8 +74,9 @@ export async function signUpAction(formData: FormData) {
 
 export async function signOutAction() {
   const supabase = await requireSupabase();
+  const { t } = await getI18n();
   await supabase.auth.signOut();
-  redirect("/login");
+  redirect(`/login?message=${encodeURIComponent(t.auth.signedOut)}`);
 }
 
 export async function requestBookingAction(formData: FormData) {
@@ -160,27 +161,4 @@ export async function approveBookingAction(formData: FormData) {
 
   revalidatePath("/admin");
   redirect(`/admin?message=${encodeURIComponent(t.common.approve)}`);
-}
-
-export async function grantVoucherAction(formData: FormData) {
-  const supabase = await requireAdmin();
-  const { t } = await getI18n();
-  const userId = getString(formData, "userId");
-  const count = Number(getString(formData, "count") || "1");
-  const expiresAt = getString(formData, "expiresAt");
-
-  const { error } = await supabase.from("vouchers").insert({
-    user_id: userId,
-    total_count: count,
-    remaining_count: count,
-    expires_at: expiresAt,
-    note: getString(formData, "note") || null,
-  });
-
-  if (error) {
-    redirect(`/admin?message=${encodeURIComponent(error.message)}`);
-  }
-
-  revalidatePath("/admin");
-  redirect(`/admin?message=${encodeURIComponent(t.admin.voucherAdded)}`);
 }

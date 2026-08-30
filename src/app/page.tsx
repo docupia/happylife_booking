@@ -3,7 +3,6 @@ import {
   Banknote,
   CalendarClock,
   CheckCircle2,
-  Clock3,
   LogIn,
   MapPin,
   ShieldCheck,
@@ -13,14 +12,15 @@ import {
 
 import { requestBookingAction, signOutAction } from "./actions";
 import {
+  BookingRow,
   ClassWithCounts,
   getClasses,
   getCurrentUserBookings,
-  getCurrentUserVouchers,
   getSessionContext,
 } from "@/lib/booking-data";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import {
   Card,
@@ -31,7 +31,7 @@ import {
 import { hasSupabaseEnv } from "@/lib/config";
 import { getI18n } from "@/lib/i18n-server";
 import type { Dictionary, Locale } from "@/lib/i18n";
-import { formatMalaysiaDate, formatMalaysiaDateTime } from "@/lib/time";
+import { formatMalaysiaDateTime } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
 
@@ -77,11 +77,13 @@ function StatusPill({
 
 function ClassCard({
   classItem,
+  booking,
   isSignedIn,
   locale,
   t,
 }: {
   classItem: ClassWithCounts;
+  booking?: BookingRow;
   isSignedIn: boolean;
   locale: Locale;
   t: Dictionary;
@@ -121,7 +123,32 @@ function ClassCard({
       </div>
 
       <div className="mt-4">
-        {!isSignedIn ? (
+        {booking ? (
+          <div
+            className={`rounded-lg p-3 text-sm ${
+              booking.status === "confirmed"
+                ? "bg-emerald-50 text-emerald-900"
+                : "bg-amber-50 text-amber-950"
+            }`}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <span className="flex items-center gap-2 font-bold">
+                {booking.status === "confirmed" ? (
+                  <CheckCircle2 className="h-4 w-4" />
+                ) : (
+                  <Banknote className="h-4 w-4" />
+                )}
+                {booking.status === "confirmed"
+                  ? t.home.seatConfirmed
+                  : t.home.bookingPending}
+              </span>
+              <Badge>{bookingStatusLabel(booking.status, t)}</Badge>
+            </div>
+            {booking.status === "pending" ? (
+              <p className="mt-2 leading-5">{t.home.transferGuide}</p>
+            ) : null}
+          </div>
+        ) : !isSignedIn ? (
           <Button asChild className="w-full">
             <Link href="/login">
               <LogIn className="h-4 w-4" />
@@ -131,14 +158,14 @@ function ClassCard({
         ) : (
           <form action={requestBookingAction}>
             <input type="hidden" name="classId" value={classItem.id} />
-            <Button
-              type="submit"
+            <SubmitButton
               disabled={!isBookable}
+              pendingText={t.home.applying}
               className="w-full disabled:bg-slate-300 disabled:text-slate-600"
             >
               <Ticket className="h-4 w-4" />
               {isBookable ? t.home.requestBooking : t.home.notAvailable}
-            </Button>
+            </SubmitButton>
           </form>
         )}
       </div>
@@ -152,15 +179,22 @@ export default async function Home({ searchParams }: PageProps) {
   const { user, isAdmin } = await getSessionContext();
   const classes = await getClasses();
   const userBookings = user ? await getCurrentUserBookings(user.id) : [];
-  const vouchers = user ? await getCurrentUserVouchers(user.id) : [];
   const visibleClasses = classes.filter((classItem) =>
     ["open", "upcoming"].includes(classItem.effective_status),
   );
   const openClasses = visibleClasses.filter(
     (classItem) => classItem.effective_status === "open",
-  );
+  ).slice(0, 3);
   const upcomingClasses = visibleClasses.filter(
     (classItem) => classItem.effective_status === "upcoming",
+  ).slice(0, 3);
+  const userBookingsByClassId = new Map(
+    userBookings
+      .filter(
+        (booking) =>
+          booking.status === "pending" || booking.status === "confirmed",
+      )
+      .map((booking) => [booking.class_id, booking]),
   );
 
   return (
@@ -179,9 +213,13 @@ export default async function Home({ searchParams }: PageProps) {
             <LanguageSwitcher initialLocale={locale} label={t.common.language} />
             {user ? (
               <form action={signOutAction}>
-                <Button variant="secondary" size="compact">
+                <SubmitButton
+                  variant="secondary"
+                  size="compact"
+                  pendingText={t.common.signingOut}
+                >
                   {t.common.signOut}
-                </Button>
+                </SubmitButton>
               </form>
             ) : (
               <Button asChild size="compact">
@@ -213,19 +251,14 @@ export default async function Home({ searchParams }: PageProps) {
       <section className="mt-5 grid grid-cols-2 gap-3">
         <Card className="shadow-none">
           <div className="flex items-center gap-2 text-sm font-semibold text-slate-600">
-            <Ticket className="h-4 w-4 text-cyan-700" />
-            {t.common.vouchers}
+            <CalendarClock className="h-4 w-4 text-cyan-700" />
+            {t.common.open}
           </div>
-          <p className="mt-2 text-3xl font-black">
-            {vouchers.reduce(
-              (total, voucher) => total + voucher.remaining_count,
-              0,
-            )}
-          </p>
+          <p className="mt-2 text-3xl font-black">{openClasses.length}</p>
         </Card>
         <Card className="shadow-none">
           <div className="flex items-center gap-2 text-sm font-semibold text-slate-600">
-            <Clock3 className="h-4 w-4 text-amber-700" />
+            <Ticket className="h-4 w-4 text-amber-700" />
             {t.common.bookings}
           </div>
           <p className="mt-2 text-3xl font-black">{userBookings.length}</p>
@@ -273,6 +306,7 @@ export default async function Home({ searchParams }: PageProps) {
               <ClassCard
                 key={classItem.id}
                 classItem={classItem}
+                booking={userBookingsByClassId.get(classItem.id)}
                 isSignedIn={Boolean(user)}
                 locale={locale}
                 t={t}
@@ -298,91 +332,13 @@ export default async function Home({ searchParams }: PageProps) {
             <ClassCard
               key={classItem.id}
               classItem={classItem}
+              booking={userBookingsByClassId.get(classItem.id)}
               isSignedIn={Boolean(user)}
               locale={locale}
               t={t}
             />
           ))}
         </div>
-      </section>
-
-      {userBookings.length > 0 ? (
-        <section className="mt-7">
-          <h2 className="mb-3 text-xl font-black">{t.home.myBookings}</h2>
-          <div className="grid gap-3">
-            {userBookings.map((booking) => (
-              <article
-                key={booking.id}
-                className="rounded-lg border border-stone-200 bg-white p-4"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-bold">
-                      {booking.classes?.title ?? t.common.class}
-                    </p>
-                    {booking.classes?.starts_at ? (
-                      <p className="mt-1 text-sm text-slate-600">
-                        {formatMalaysiaDateTime(
-                          booking.classes.starts_at,
-                          locale,
-                        )}
-                      </p>
-                    ) : null}
-                  </div>
-                  <Badge>{bookingStatusLabel(booking.status, t)}</Badge>
-                </div>
-                {booking.status === "pending" ? (
-                  <div className="mt-3 flex gap-2 rounded-lg bg-amber-50 p-3 text-sm text-amber-950">
-                    <Banknote className="mt-0.5 h-4 w-4 shrink-0" />
-                    <p>
-                      {t.home.transferGuide}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="mt-3 flex gap-2 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-900">
-                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
-                    <p>{t.home.seatConfirmed}</p>
-                  </div>
-                )}
-              </article>
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      {vouchers.length > 0 ? (
-        <section className="mt-7">
-          <h2 className="mb-3 text-xl font-black">{t.home.activeVouchers}</h2>
-          <div className="grid gap-3">
-            {vouchers.map((voucher) => (
-              <article
-                key={voucher.id}
-                className="rounded-lg border border-stone-200 bg-white p-4"
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <p className="font-bold">
-                    {voucher.remaining_count}/{voucher.total_count}{" "}
-                    {t.common.left}
-                  </p>
-                  <p className="text-sm font-semibold text-slate-600">
-                    {t.common.expires}{" "}
-                    {formatMalaysiaDate(voucher.expires_at, locale)}
-                  </p>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      <section className="mt-7 rounded-lg border border-stone-200 bg-white p-4">
-        <h2 className="flex items-center gap-2 text-lg font-black">
-          <Banknote className="h-5 w-5 text-amber-700" />
-          {t.home.paymentGuide}
-        </h2>
-        <p className="mt-2 text-sm leading-6 text-slate-600">
-          {t.home.membersWithoutVoucher}
-        </p>
       </section>
 
       <nav className="fixed inset-x-0 bottom-0 border-t border-stone-200 bg-white/95 px-4 py-2 backdrop-blur">

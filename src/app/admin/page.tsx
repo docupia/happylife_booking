@@ -5,27 +5,23 @@ import {
   Check,
   MapPin,
   ShieldAlert,
-  TicketPlus,
   UsersRound,
 } from "lucide-react";
 
 import {
   approveBookingAction,
   createClassAction,
-  grantVoucherAction,
   signOutAction,
   updateClassAction,
 } from "../actions";
 import { getAdminData, getSessionContext } from "@/lib/booking-data";
 import { ADMIN_EMAIL, hasSupabaseEnv } from "@/lib/config";
 import {
-  defaultVoucherExpiryDate,
-  formatMalaysiaDate,
   formatMalaysiaDateTime,
   toMalaysiaLocalInputValue,
 } from "@/lib/time";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Card } from "@/components/ui/card";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import {
@@ -83,7 +79,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   const params = await searchParams;
   const { locale, t } = await getI18n();
   const { user, isAdmin } = await getSessionContext();
-  const { classes, bookings, profiles, vouchers } = await getAdminData();
+  const { classes, bookings, profiles } = await getAdminData();
   const groupedClasses = {
     open: classes.filter((classItem) => classItem.effective_status === "open"),
     upcoming: classes.filter(
@@ -186,9 +182,13 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           <div className="flex items-center gap-2">
             <LanguageSwitcher initialLocale={locale} label={t.common.language} />
             <form action={signOutAction}>
-              <Button variant="secondary" size="compact">
+              <SubmitButton
+                variant="secondary"
+                size="compact"
+                pendingText={t.common.signingOut}
+              >
                 {t.common.signOut}
-              </Button>
+              </SubmitButton>
             </form>
           </div>
         </div>
@@ -268,9 +268,12 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             {t.common.summary}
             <Textarea name="summary" required />
           </label>
-          <Button className="md:col-span-2">
+          <SubmitButton
+            className="md:col-span-2"
+            pendingText={t.admin.creatingClass}
+          >
             {t.common.create}
-          </Button>
+          </SubmitButton>
         </form>
       </Card>
 
@@ -401,9 +404,12 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                           className={textareaClassName}
                         />
                       </label>
-                      <Button className="md:col-span-2">
+                      <SubmitButton
+                        className="md:col-span-2"
+                        pendingText={t.admin.savingClass}
+                      >
                         {t.common.saveChanges}
-                      </Button>
+                      </SubmitButton>
                     </form>
                   </details>
 
@@ -443,10 +449,15 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                                 name="bookingId"
                                 value={booking.id}
                               />
-                              <Button variant="success" size="compact" className="w-full">
+                              <SubmitButton
+                                variant="success"
+                                size="compact"
+                                className="w-full"
+                                pendingText={t.admin.approving}
+                              >
                                 <Check className="h-4 w-4" />
                                 {t.common.approve}
-                              </Button>
+                              </SubmitButton>
                             </form>
                           ) : null}
                         </div>
@@ -466,85 +477,6 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           </div>
         </section>
       ))}
-
-      <Card className="mt-8">
-        <h2 className="flex items-center gap-2 text-xl font-black">
-          <TicketPlus className="h-5 w-5 text-cyan-800" />
-          {t.admin.studentVouchers}
-        </h2>
-        <form action={grantVoucherAction} className="mt-4 grid gap-3 md:grid-cols-2">
-          <label className="grid gap-1.5 text-sm font-semibold">
-            {t.common.student}
-            <Select name="userId" required>
-              <option value="">{t.admin.selectStudent}</option>
-              {profiles.map((profile) => (
-                <option key={profile.id} value={profile.id}>
-                  {profile.full_name || profile.email}
-                </option>
-              ))}
-            </Select>
-          </label>
-          <label className="grid gap-1.5 text-sm font-semibold">
-            {t.admin.voucherCount}
-            <input
-              name="count"
-              type="number"
-              min="1"
-              defaultValue="1"
-              required
-              className={inputClassName}
-            />
-          </label>
-          <label className="grid gap-1.5 text-sm font-semibold">
-            {t.common.expireDate}
-            <input
-              name="expiresAt"
-              type="date"
-              defaultValue={defaultVoucherExpiryDate()}
-              required
-              className={inputClassName}
-            />
-          </label>
-          <label className="grid gap-1.5 text-sm font-semibold">
-            {t.common.note}
-            <Input name="note" />
-          </label>
-          <Button className="md:col-span-2">
-            {t.admin.addVoucher}
-          </Button>
-        </form>
-
-        <div className="mt-5 grid gap-2">
-          {vouchers.length === 0 ? (
-            <p className="rounded-lg bg-stone-50 p-3 text-sm text-slate-600">
-              {t.admin.noVouchers}
-            </p>
-          ) : null}
-          {vouchers.map((voucher) => (
-            <article
-              key={voucher.id}
-              className="rounded-lg border border-stone-200 p-3"
-            >
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="break-all text-sm font-bold">
-                    {voucher.profiles?.full_name ||
-                      voucher.profiles?.email ||
-                      t.common.student}
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    {t.common.expires}{" "}
-                    {formatMalaysiaDate(voucher.expires_at, locale)}
-                  </p>
-                </div>
-                <span className="rounded-lg bg-cyan-50 px-2.5 py-1 text-sm font-black text-cyan-900">
-                  {voucher.remaining_count}/{voucher.total_count}
-                </span>
-              </div>
-            </article>
-          ))}
-        </div>
-      </Card>
     </main>
   );
 }
