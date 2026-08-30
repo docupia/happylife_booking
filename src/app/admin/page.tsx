@@ -1,6 +1,7 @@
 import Link from "next/link";
 import {
   ArrowLeft,
+  BookOpenCheck,
   CalendarPlus,
   Check,
   MapPin,
@@ -21,6 +22,7 @@ import {
   toMalaysiaLocalInputValue,
 } from "@/lib/time";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Card } from "@/components/ui/card";
 import { LanguageSwitcher } from "@/components/language-switcher";
@@ -181,6 +183,12 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           </div>
           <div className="flex items-center gap-2">
             <LanguageSwitcher initialLocale={locale} label={t.common.language} />
+            <Button asChild variant="secondary" size="compact">
+              <Link href="/guide">
+                <BookOpenCheck className="h-4 w-4" />
+                {t.common.guide}
+              </Link>
+            </Button>
             <form action={signOutAction}>
               <SubmitButton
                 variant="secondary"

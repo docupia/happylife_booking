@@ -25,6 +25,7 @@ export const dictionaries = {
       expireDate: "Expire date",
       expires: "Expires",
       fullName: "Full name",
+      guide: "Guide",
       language: "Language",
       left: "left",
       live: "Live",
@@ -66,6 +67,29 @@ export const dictionaries = {
       signInToBook: "Sign in to book",
       transferGuide:
         "Please wait for admin approval after deposit confirmation.",
+    },
+    guide: {
+      title: "Class Guide",
+      intro:
+        "Many members are currently requesting to join. Following MK11 office rules, each class has a limited number of available spots. Please request only the dates you can actually attend.",
+      approvalTitle:
+        "Approval criteria when booking requests exceed class capacity",
+      mannersTitle: "Happy Life Class Manners",
+      approvalCriteria: {
+        one: "Members who consistently join and follow Happy Life rules well",
+        two: "MK11 resident members",
+        three:
+          "Members who miss classes without notice or cancel often may be given lower priority for future approvals",
+        four:
+          "New members or members with fewer attendances may be placed after existing members",
+        five:
+          "If you cannot attend, please let us know 2 to 3 days in advance so another member can take the spot.",
+      },
+      manners: {
+        one: "Class starts at 8:30 AM, so please arrive before 8:30 AM.",
+        two:
+          "If you need to leave early during class, please let us know in advance.",
+      },
     },
     auth: {
       alreadyHaveAccount: "Already have an account? Sign in",
@@ -139,6 +163,7 @@ export const dictionaries = {
       expireDate: "만료일",
       expires: "만료",
       fullName: "이름",
+      guide: "가이드",
       language: "언어",
       left: "남음",
       live: "실시간",
@@ -180,6 +205,29 @@ export const dictionaries = {
       signInToBook: "로그인 후 예약",
       transferGuide:
         "입금 후 관리자 승인까지 기다려주세요. 입금 확인 후 예약이 확정됩니다.",
+    },
+    guide: {
+      title: "클래스 참여 가이드",
+      intro:
+        "현재 참여 신청한 인원이 많아 MK11 오피스 규정에 따라 매 수업 참여 가능한 숫자는 제한됩니다. 따라서, 앱에서 실제로 참여 가능한 날짜에만 참여 신청을 해주시기 바랍니다.",
+      approvalTitle:
+        "예약 앱 신청 인원이 정원보다 많을 경우 승인 기준",
+      mannersTitle: "해피라이프 클래스 참여 매너",
+      approvalCriteria: {
+        one: "Happy Life 규칙을 잘 지키고 꾸준히 참여하는 회원",
+        two: "MK11 거주 회원",
+        three:
+          "신청 후 무단으로 불참하거나 취소가 잦은 경우, 다음 수업 승인 후순위 배정",
+        four:
+          "신규 회원 또는 참여 횟수가 적은 회원은 기존회원들에 비해서 후순위 배정",
+        five:
+          "참석이 어려운 경우 2~3일 전에 꼭 알려주세요. 그래야 다른 회원에게 참여 기회를 드릴 수 있습니다.",
+      },
+      manners: {
+        one: "수업은 오전 8:30에 시작하므로 8:30 이전에 도착해 주시기 바랍니다.",
+        two:
+          "수업 중 부득이하게 먼저 나가야 하는 경우에는 미리 알려주시기 바랍니다.",
+      },
     },
     auth: {
       alreadyHaveAccount: "이미 계정이 있나요? 로그인",

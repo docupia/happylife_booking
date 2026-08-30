@@ -333,11 +333,14 @@ export default async function Home({ searchParams }: PageProps) {
       <nav className="fixed inset-x-0 bottom-0 border-t border-stone-200 bg-white/95 px-4 py-2 backdrop-blur">
         <div
           className={`mx-auto grid max-w-3xl gap-2 ${
-            isAdmin ? "grid-cols-3" : "grid-cols-2"
+            isAdmin ? "grid-cols-4" : "grid-cols-3"
           }`}
         >
           <Button asChild>
             <a href="#">{t.common.classes}</a>
+          </Button>
+          <Button asChild variant="ghost">
+            <Link href="/guide">{t.common.guide}</Link>
           </Button>
           <Button asChild variant="ghost">
             <Link href="/login">{t.common.account}</Link>
