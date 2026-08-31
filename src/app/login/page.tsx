@@ -45,7 +45,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           {isSignup ? t.auth.createAccount : t.auth.welcomeBack}
         </h1>
         <p className="mt-2 text-sm leading-6 text-slate-600">
-          {t.auth.useSameLogin}
+          {isSignup ? t.auth.createAndStart : t.auth.useSameLogin}
         </p>
 
         {params?.message ? (

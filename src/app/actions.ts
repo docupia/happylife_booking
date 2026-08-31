@@ -51,11 +51,12 @@ export async function signInAction(formData: FormData) {
 
 export async function signUpAction(formData: FormData) {
   const supabase = await requireSupabase();
+  const { t } = await getI18n();
   const email = getString(formData, "email").toLowerCase();
   const password = getString(formData, "password");
   const fullName = getString(formData, "fullName");
 
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -69,7 +70,22 @@ export async function signUpAction(formData: FormData) {
     redirect(`/login?mode=signup&message=${encodeURIComponent(error.message)}`);
   }
 
-  redirect(`/login/check-email?email=${encodeURIComponent(email)}`);
+  if (data.session) {
+    redirect(email === ADMIN_EMAIL ? "/admin" : "/");
+  }
+
+  const { error: signInError } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (signInError) {
+    redirect(
+      `/login?message=${encodeURIComponent(t.auth.emailConfirmationStillEnabled)}`,
+    );
+  }
+
+  redirect(email === ADMIN_EMAIL ? "/admin" : "/");
 }
 
 export async function signOutAction() {

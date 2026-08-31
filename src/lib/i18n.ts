@@ -93,13 +93,11 @@ export const dictionaries = {
       alreadyHaveAccount: "Already have an account? Sign in",
       atLeastCharacters: "At least 6 characters",
       checkEmail: "Check your email",
+      createAndStart: "Create an account and start booking right away.",
       createAccount: "Create account",
-      emailVerification: "Email Verification",
+      emailConfirmationStillEnabled:
+        "Account created, but Supabase email confirmation is still enabled. Please ask the administrator to disable Confirm Email, then sign in again.",
       newMember: "New member? Create account",
-      sentVerification:
-        "We sent a verification link. Please verify your email first, then return to the login page.",
-      sentVerificationTo:
-        "We sent a verification link to {email}. Please verify your email first, then return to the login page.",
       sessionExpired:
         "Your session expired after 2 hours of inactivity. Please sign in again.",
       signedOut: "You have been signed out.",
@@ -228,13 +226,11 @@ export const dictionaries = {
       alreadyHaveAccount: "이미 계정이 있나요? 로그인",
       atLeastCharacters: "6자 이상 입력",
       checkEmail: "이메일을 확인해주세요",
+      createAndStart: "계정을 만들고 바로 예약을 시작하세요.",
       createAccount: "계정 만들기",
-      emailVerification: "이메일 인증",
+      emailConfirmationStillEnabled:
+        "계정은 생성되었지만 Supabase 이메일 인증 설정이 아직 켜져 있습니다. 관리자가 Confirm Email을 끈 뒤 다시 로그인해주세요.",
       newMember: "처음이신가요? 회원가입",
-      sentVerification:
-        "인증 링크를 보냈습니다. 이메일 인증을 먼저 완료한 뒤 로그인 페이지로 돌아와 주세요.",
-      sentVerificationTo:
-        "{email} 주소로 인증 링크를 보냈습니다. 이메일 인증을 먼저 완료한 뒤 로그인 페이지로 돌아와 주세요.",
       sessionExpired:
         "2시간 동안 사용하지 않아 로그아웃되었습니다. 다시 로그인해주세요.",
       signedOut: "로그아웃되었습니다.",
