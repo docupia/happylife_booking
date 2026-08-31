@@ -16,7 +16,6 @@ import { Button } from "@/components/ui/button";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { ClassCalendar } from "@/components/class-calendar";
-import { ClassCard } from "@/components/class-card";
 import { Card } from "@/components/ui/card";
 import { hasSupabaseEnv } from "@/lib/config";
 import { getI18n } from "@/lib/i18n-server";
@@ -35,23 +34,13 @@ export default async function Home({ searchParams }: PageProps) {
   const { user, isAdmin } = await getSessionContext();
   const classes = await getClasses();
   const userBookings = user ? await getCurrentUserBookings(user.id) : [];
-  const visibleClasses = classes.filter((classItem) =>
-    ["open", "upcoming"].includes(classItem.effective_status),
+  const activeUserBookings = userBookings.filter(
+    (booking) =>
+      booking.status === "pending" || booking.status === "confirmed",
   );
-  const openClasses = visibleClasses.filter(
+  const openClasses = classes.filter(
     (classItem) => classItem.effective_status === "open",
   ).slice(0, 12);
-  const upcomingClasses = visibleClasses.filter(
-    (classItem) => classItem.effective_status === "upcoming",
-  ).slice(0, 3);
-  const userBookingsByClassId = new Map(
-    userBookings
-      .filter(
-        (booking) =>
-          booking.status === "pending" || booking.status === "confirmed",
-      )
-      .map((booking) => [booking.class_id, booking]),
-  );
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col px-4 pb-24 pt-4 sm:px-6">
@@ -117,7 +106,7 @@ export default async function Home({ searchParams }: PageProps) {
             <Ticket className="h-4 w-4 text-amber-700" />
             {t.common.bookings}
           </div>
-          <p className="mt-2 text-3xl font-black">{userBookings.length}</p>
+          <p className="mt-2 text-3xl font-black">{activeUserBookings.length}</p>
         </Card>
       </section>
 
@@ -159,51 +148,12 @@ export default async function Home({ searchParams }: PageProps) {
         {user ? (
           <ClassCalendar
             classes={openClasses}
-            userBookings={userBookings}
+            userBookings={activeUserBookings}
             isSignedIn={Boolean(user)}
             locale={locale}
             t={t}
           />
         ) : null}
-        <div className="grid gap-3">
-          {openClasses.length > 0 ? (
-            openClasses.map((classItem) => (
-              <ClassCard
-                key={classItem.id}
-                classItem={classItem}
-                booking={userBookingsByClassId.get(classItem.id)}
-                isSignedIn={Boolean(user)}
-                locale={locale}
-                t={t}
-              />
-            ))
-          ) : (
-            <p className="rounded-lg border border-stone-200 bg-white p-4 text-sm text-slate-600">
-              {t.home.noOpenClasses}
-            </p>
-          )}
-        </div>
-      </section>
-
-      <section className="mt-7">
-        <div className="mb-3 flex items-end justify-between gap-3">
-          <h2 className="text-xl font-black">{t.common.openingSoon}</h2>
-          <span className="text-sm font-semibold text-slate-500">
-            {upcomingClasses.length}
-          </span>
-        </div>
-        <div className="grid gap-3">
-          {upcomingClasses.map((classItem) => (
-            <ClassCard
-              key={classItem.id}
-              classItem={classItem}
-              booking={userBookingsByClassId.get(classItem.id)}
-              isSignedIn={Boolean(user)}
-              locale={locale}
-              t={t}
-            />
-          ))}
-        </div>
       </section>
 
       <nav className="fixed inset-x-0 bottom-0 border-t border-stone-200 bg-white/95 px-4 py-2 backdrop-blur">
