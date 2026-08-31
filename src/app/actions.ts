@@ -112,6 +112,24 @@ export async function requestBookingAction(formData: FormData) {
   redirect(`/?message=${encodeURIComponent(t.home.bookingReceived)}`);
 }
 
+export async function cancelBookingAction(formData: FormData) {
+  const supabase = await requireSupabase();
+  const { t } = await getI18n();
+  const bookingId = getString(formData, "bookingId");
+
+  const { error } = await supabase.rpc("cancel_booking", {
+    input_booking_id: bookingId,
+  });
+
+  if (error) {
+    redirect(`/?message=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath("/");
+  revalidatePath("/admin");
+  redirect(`/?message=${encodeURIComponent(t.home.bookingCancelled)}`);
+}
+
 export async function createClassAction(formData: FormData) {
   const supabase = await requireAdmin();
   const { t } = await getI18n();

@@ -54,8 +54,11 @@ export const dictionaries = {
       applying: "Sending request...",
       addSupabase:
         "Add Supabase environment variables to enable login, booking, and admin management.",
+      bookingCancelled: "Booking request cancelled.",
       bookingReceived:
         "Booking request received. Please wait for admin approval after deposit confirmation.",
+      cancelBooking: "Cancel Booking",
+      cancelingBooking: "Cancelling...",
       malaysiaTime: "Malaysia time",
       noOpenClasses: "No open classes right now.",
       notAvailable: "Not Available",
@@ -188,8 +191,11 @@ export const dictionaries = {
       applying: "신청 처리 중...",
       addSupabase:
         "로그인, 예약, 관리자 기능을 사용하려면 Supabase 환경 변수를 추가하세요.",
+      bookingCancelled: "예약 신청이 취소되었습니다.",
       bookingReceived:
         "예약 신청이 접수되었습니다. 입금 안내 후 관리자 승인을 기다려주세요.",
+      cancelBooking: "예약 취소",
+      cancelingBooking: "취소 처리 중...",
       malaysiaTime: "말레이시아 시간",
       noOpenClasses: "현재 오픈된 클래스가 없습니다.",
       notAvailable: "예약 불가",

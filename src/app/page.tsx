@@ -7,9 +7,14 @@ import {
   MapPin,
   ShieldCheck,
   Ticket,
+  XCircle,
 } from "lucide-react";
 
-import { requestBookingAction, signOutAction } from "./actions";
+import {
+  cancelBookingAction,
+  requestBookingAction,
+  signOutAction,
+} from "./actions";
 import {
   BookingRow,
   ClassWithCounts,
@@ -136,6 +141,18 @@ function ClassCard({
             {booking.status === "pending" ? (
               <p className="mt-2 leading-5">{t.home.transferGuide}</p>
             ) : null}
+            <form action={cancelBookingAction} className="mt-3">
+              <input type="hidden" name="bookingId" value={booking.id} />
+              <SubmitButton
+                variant="secondary"
+                size="compact"
+                className="w-full"
+                pendingText={t.home.cancelingBooking}
+              >
+                <XCircle className="h-4 w-4" />
+                {t.home.cancelBooking}
+              </SubmitButton>
+            </form>
           </div>
         ) : !isSignedIn ? (
           <Button asChild className="w-full">
