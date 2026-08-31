@@ -70,25 +70,23 @@ export const dictionaries = {
     },
     guide: {
       title: "Class Guide",
-      intro:
-        "Many members are currently requesting to join. Following MK11 office rules, each class has a limited number of available spots. Please request only the dates you can actually attend.",
+      rulesTitle: "📌 Happy Life Participation Rules",
       approvalTitle:
         "Approval criteria when booking requests exceed class capacity",
-      mannersTitle: "Happy Life Class Manners",
-      approvalCriteria: {
-        one: "Members who consistently join and follow Happy Life rules well",
-        two: "MK11 resident members",
-        three:
-          "Members who miss classes without notice or cancel often may be given lower priority for future approvals",
-        four:
-          "New members or members with fewer attendances may be placed after existing members",
-        five:
-          "If you cannot attend, please let us know 2 to 3 days in advance so another member can take the spot.",
-      },
-      manners: {
-        one: "Class starts at 8:30 AM, so please arrive before 8:30 AM.",
+      rules: {
+        one: "Class starts exactly at 8:30 AM. Please arrive before class begins.",
         two:
-          "If you need to leave early during class, please let us know in advance.",
+          "Please avoid leaving in the middle of class so the session can run smoothly.",
+        three:
+          "If you must leave early, please send a message in advance.",
+        four:
+          "If you cannot attend a Monday, Wednesday, or Friday class, please cancel 2 to 3 days in advance so another member can take the spot.",
+      },
+      approvalCriteria: {
+        one:
+          "When requests exceed capacity, members who participate consistently and follow class rules well will be approved first.",
+        two:
+          "Members with no-shows or frequent cancellations may be placed lower in priority for the next class approval.",
       },
     },
     auth: {
@@ -208,25 +206,22 @@ export const dictionaries = {
     },
     guide: {
       title: "클래스 참여 가이드",
-      intro:
-        "현재 참여 신청한 인원이 많아 MK11 오피스 규정에 따라 매 수업 참여 가능한 숫자는 제한됩니다. 따라서, 앱에서 실제로 참여 가능한 날짜에만 참여 신청을 해주시기 바랍니다.",
+      rulesTitle: "📌 Happy Life 참여 규칙",
       approvalTitle:
         "예약 앱 신청 인원이 정원보다 많을 경우 승인 기준",
-      mannersTitle: "해피라이프 클래스 참여 매너",
-      approvalCriteria: {
-        one: "Happy Life 규칙을 잘 지키고 꾸준히 참여하는 회원",
-        two: "MK11 거주 회원",
+      rules: {
+        one: "수업은 오전 8:30 정시 시작입니다. 수업 전에 도착해 주세요.",
+        two: "원활한 수업 진행을 위해 중간 퇴실은 자제해 주세요.",
         three:
-          "신청 후 무단으로 불참하거나 취소가 잦은 경우, 다음 수업 승인 후순위 배정",
+          "부득이하게 먼저 나가야 할 경우 미리 메시지 부탁드립니다.",
         four:
-          "신규 회원 또는 참여 횟수가 적은 회원은 기존회원들에 비해서 후순위 배정",
-        five:
-          "참석이 어려운 경우 2~3일 전에 꼭 알려주세요. 그래야 다른 회원에게 참여 기회를 드릴 수 있습니다.",
+          "월·수·금 수업 중 참여가 어려운 날이 있다면 2~3일 전에 취소해 주세요. 다른 회원에게 참여 기회를 드릴 수 있습니다.",
       },
-      manners: {
-        one: "수업은 오전 8:30에 시작하므로 8:30 이전에 도착해 주시기 바랍니다.",
+      approvalCriteria: {
+        one:
+          "정원 초과 시 꾸준히 참여하고 수업 규칙을 잘 지키는 회원을 우선 승인합니다.",
         two:
-          "수업 중 부득이하게 먼저 나가야 하는 경우에는 미리 알려주시기 바랍니다.",
+          "무단 불참 또는 잦은 취소가 있을 경우 다음 수업 승인 시 후순위로 배정될 수 있습니다.",
       },
     },
     auth: {

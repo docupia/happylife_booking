@@ -5,7 +5,6 @@ import {
   ClipboardCheck,
   LogIn,
   ShieldCheck,
-  Sparkles,
 } from "lucide-react";
 
 import { signOutAction } from "../actions";
@@ -21,14 +20,16 @@ export const dynamic = "force-dynamic";
 export default async function GuidePage() {
   const { locale, t } = await getI18n();
   const { user, isAdmin } = await getSessionContext();
+  const rules = [
+    t.guide.rules.one,
+    t.guide.rules.two,
+    t.guide.rules.three,
+    t.guide.rules.four,
+  ];
   const approvalCriteria = [
     t.guide.approvalCriteria.one,
     t.guide.approvalCriteria.two,
-    t.guide.approvalCriteria.three,
-    t.guide.approvalCriteria.four,
-    t.guide.approvalCriteria.five,
   ];
-  const manners = [t.guide.manners.one, t.guide.manners.two];
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col px-4 pb-24 pt-4 sm:px-6">
@@ -73,28 +74,12 @@ export default async function GuidePage() {
 
       <section className="mt-5">
         <Card>
-          <div className="flex items-start gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-cyan-800 text-white">
-              <BookOpenCheck className="h-5 w-5" />
-            </div>
-            <div>
-              <h2 className="text-xl font-black">{t.guide.title}</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                {t.guide.intro}
-              </p>
-            </div>
-          </div>
-        </Card>
-      </section>
-
-      <section className="mt-4">
-        <Card>
           <h2 className="flex items-center gap-2 text-lg font-black">
-            <ClipboardCheck className="h-5 w-5 text-cyan-800" />
-            {t.guide.approvalTitle}
+            <BookOpenCheck className="h-5 w-5 text-cyan-800" />
+            {t.guide.rulesTitle}
           </h2>
           <ol className="mt-4 grid gap-3">
-            {approvalCriteria.map((item, index) => (
+            {rules.map((item, index) => (
               <li key={item} className="flex gap-3 text-sm leading-6">
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-stone-100 text-xs font-black text-slate-700">
                   {index + 1}
@@ -109,19 +94,19 @@ export default async function GuidePage() {
       <section className="mt-4">
         <Card>
           <h2 className="flex items-center gap-2 text-lg font-black">
-            <Sparkles className="h-5 w-5 text-amber-700" />
-            {t.guide.mannersTitle}
+            <ClipboardCheck className="h-5 w-5 text-amber-700" />
+            {t.guide.approvalTitle}
           </h2>
-          <ol className="mt-4 grid gap-3">
-            {manners.map((item, index) => (
+          <ul className="mt-4 grid gap-3">
+            {approvalCriteria.map((item) => (
               <li key={item} className="flex gap-3 text-sm leading-6">
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-xs font-black text-amber-900">
-                  {index + 1}
+                  ■
                 </span>
                 <span className="pt-0.5 text-slate-700">{item}</span>
               </li>
             ))}
-          </ol>
+          </ul>
         </Card>
       </section>
 

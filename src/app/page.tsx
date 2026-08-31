@@ -173,7 +173,7 @@ export default async function Home({ searchParams }: PageProps) {
   );
   const openClasses = visibleClasses.filter(
     (classItem) => classItem.effective_status === "open",
-  ).slice(0, 3);
+  ).slice(0, 12);
   const upcomingClasses = visibleClasses.filter(
     (classItem) => classItem.effective_status === "upcoming",
   ).slice(0, 3);
